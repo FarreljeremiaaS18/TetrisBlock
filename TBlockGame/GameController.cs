@@ -1,4 +1,3 @@
-
 using System;
 using System.Media;
 using System.Windows.Forms;
@@ -19,7 +18,9 @@ public class GameController
     public void SpawnBlock()
     {
         BlockBase block = GenerateRandomBlock();
-        block.Location = new System.Drawing.Point(300, 50);
+
+      
+        block.Location = new System.Drawing.Point(50, 200);
 
         block.OnBlockPlaced = () =>
         {
@@ -27,13 +28,21 @@ public class GameController
             {
                 block.Place(grid);
                 PlaySound("PLACE.wav");
+
+                
+                RefreshGridDisplay();
+
                 int cleared = grid.ClearFullLines();
                 if (cleared > 0)
                 {
                     AddScore(cleared * 100);
                     PlaySound("CLEAR.wav");
                     MessageBox.Show($"{cleared} line(s) cleared!");
+
+                   
+                    RefreshGridDisplay();
                 }
+
                 form.Controls.Remove(block);
 
                 if (IsGameOver())
@@ -43,12 +52,27 @@ public class GameController
             }
             else
             {
-                MessageBox.Show("Tidak bisa ditempatkan!");
+                MessageBox.Show("Cannot place block here!");
+
+               
+                block.Location = new System.Drawing.Point(50, 200);
             }
         };
 
-
         form.Controls.Add(block);
+    }
+
+    private void RefreshGridDisplay()
+    {
+       
+        foreach (Control ctrl in form.Controls)
+        {
+            if (ctrl is GridPanel)
+            {
+                ctrl.Invalidate(); 
+                break;
+            }
+        }
     }
 
     private BlockBase GenerateRandomBlock()
@@ -72,9 +96,10 @@ public class GameController
 
     public bool IsGameOver()
     {
-        for (int y = 0; y <= 9 - 3; y++)
+        
+        for (int y = 0; y < 9; y++)
         {
-            for (int x = 0; x <= 9 - 3; x++)
+            for (int x = 0; x < 9; x++)
             {
                 var testBlocks = new BlockBase[] { new BlockL(), new BlockT(), new BlockSquare() };
                 foreach (var block in testBlocks)
