@@ -47,11 +47,13 @@ public abstract class BlockBase : Panel, IDraggable
     {
         isDragging = false;
         OnDragEnd();
+        OnBlockPlaced?.Invoke();
     }
 
     public virtual void OnDragStart() => this.BringToFront();
     public virtual void OnDragging(int x, int y) => GridPosition = new Point(x / cellSize, y / cellSize);
     public virtual void OnDragEnd() { }
+    public Action OnBlockPlaced;
 
     public abstract void Place(GridManager grid);
     public abstract bool CanPlace(GridManager grid);

@@ -21,17 +21,17 @@ public class GameController
         BlockBase block = GenerateRandomBlock();
         block.Location = new System.Drawing.Point(300, 50);
 
-        block.OnDragEnd = () =>
+        block.OnBlockPlaced = () =>
         {
             if (block.CanPlace(grid))
             {
                 block.Place(grid);
-                PlaySound("place.wav");
+                PlaySound("PLACE.wav");
                 int cleared = grid.ClearFullLines();
                 if (cleared > 0)
                 {
                     AddScore(cleared * 100);
-                    PlaySound("clear.wav");
+                    PlaySound("CLEAR.wav");
                     MessageBox.Show($"{cleared} line(s) cleared!");
                 }
                 form.Controls.Remove(block);
@@ -46,6 +46,7 @@ public class GameController
                 MessageBox.Show("Tidak bisa ditempatkan!");
             }
         };
+
 
         form.Controls.Add(block);
     }
