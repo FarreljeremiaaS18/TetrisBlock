@@ -8,4 +8,30 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Resources\ALERT.wav" />
+    <None Remove="Resources\CLEAR.wav" />
+    <None Remove="Resources\GAMEOVER.mp3" />
+    <None Remove="Resources\GAMEOVER.wav" />
+    <None Remove="Resources\PLACE.wav" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\ALERT.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\CLEAR.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\GAMEOVER.mp3">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\GAMEOVER.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\PLACE.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

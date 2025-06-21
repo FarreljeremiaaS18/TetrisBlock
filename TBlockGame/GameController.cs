@@ -1,6 +1,8 @@
-using System;
+﻿using System;
 using System.Media;
 using System.Windows.Forms;
+
+
 
 public class GameController
 {
@@ -8,6 +10,7 @@ public class GameController
     private FormMain form;
     private Random rnd = new Random();
     private int score = 0;
+    private List<BlockBase> activeBlocks = new List<BlockBase>();
 
     public GameController(FormMain form)
     {
@@ -17,22 +20,39 @@ public class GameController
 
     public void SpawnBlock()
     {
+        // Hapus blok yang sudah ditempatkan (tidak lagi di form)
+        activeBlocks.RemoveAll(b => !form.Controls.Contains(b));
+
+        // Jika sudah ada 2 block aktif, jangan spawn lagi
+        if (activeBlocks.Count >= 2)
+        {
+            MessageBox.Show("Maksimal 2 block aktif dalam satu waktu.");
+            return;
+        }
+
+        // Cek apakah ada kemungkinan block apa pun bisa ditempatkan
+        if (!CanAnyBlockFit())
+        {
+            MessageBox.Show("Game Over!\nTidak Tersedia Grid kosong yang mampu untuk menempatkan block lagi");
+            return;
+        }
+
+        // Spawn block baru
         BlockBase block = GenerateRandomBlock();
 
-        // Position the block di area spawn (kiri atas form)
-        block.Location = new System.Drawing.Point(20, 200);
+        // Tentukan posisi spawn
+        int spawnX = 20;
+        int spawnY = 200 + (activeBlocks.Count * 120); // block ke-2 lebih bawah
 
-        // Set initial grid position yang tidak valid (di luar grid)
-        block.GridPosition = new System.Drawing.Point(-10, -10);
+        block.Location = new System.Drawing.Point(spawnX, spawnY);
+        block.GridPosition = new System.Drawing.Point(-10, -10); // awal tidak valid
 
         block.OnBlockPlaced = () =>
         {
-            // Cek apakah block bisa ditempatkan
             if (block.CanPlace(grid))
             {
                 block.Place(grid);
                 PlaySound("PLACE.wav");
-
                 RefreshGridDisplay();
 
                 int cleared = grid.ClearFullLines();
@@ -41,27 +61,59 @@ public class GameController
                     AddScore(cleared * 100);
                     PlaySound("CLEAR.wav");
                     MessageBox.Show($"{cleared} line(s) cleared!");
-
                     RefreshGridDisplay();
                 }
 
                 form.Controls.Remove(block);
+                activeBlocks.Remove(block);
 
-                if (IsGameOver())
+                // ❗ Cek apakah game benar-benar sudah over setelah block ditempatkan
+                if (activeBlocks.Count == 0 && !CanAnyBlockFit())
                 {
-                    MessageBox.Show("Game Over!");
+                    PlaySound("GAMEOVER.mp3");
+                    MessageBox.Show("Game Over!\nTidak ada lagi block yang bisa ditempatkan.");
                 }
             }
             else
             {
+                PlaySound("ALERT.wav");
                 MessageBox.Show("Cannot place block here!");
-                // Kembalikan ke posisi spawn
-                block.Location = new System.Drawing.Point(20, 200);
+                block.Location = new System.Drawing.Point(spawnX, spawnY);
                 block.GridPosition = new System.Drawing.Point(-10, -10);
             }
         };
-
         form.Controls.Add(block);
+        activeBlocks.Add(block);
+
+        // Setelah spawn 2 block, cek apakah salah satunya bisa diletakkan
+        if (activeBlocks.Count == 2 && !CanAnyActiveBlockBePlaced())
+        {
+            PlaySound("GAMEOVER.wav");
+            MessageBox.Show("Game Over!\nKedua block tidak dapat diletakkan.");
+        }
+    }
+
+    private bool CanAnyBlockFit()
+    {
+        var testBlocks = new BlockBase[] { new BlockL(), new BlockT(), new BlockSquare() };
+
+        foreach (var block in testBlocks)
+        {
+            for (int rotation = 0; rotation < block.AllShapes.Length; rotation++)
+            {
+                block.SetRotation(rotation);
+                for (int y = 0; y < 9; y++)
+                {
+                    for (int x = 0; x < 9; x++)
+                    {
+                        block.GridPosition = new System.Drawing.Point(x, y);
+                        if (block.CanPlace(grid))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private bool IsBlockInGridArea(BlockBase block)
@@ -138,13 +190,48 @@ public class GameController
         return true;
     }
 
+    private bool CanAnyActiveBlockBePlaced()
+    {
+        foreach (var block in activeBlocks)
+        {
+            for (int rotation = 0; rotation < block.AllShapes.Length; rotation++)
+            {
+                block.SetRotation(rotation);
+                for (int y = 0; y < 9; y++)
+                {
+                    for (int x = 0; x < 9; x++)
+                    {
+                        block.GridPosition = new System.Drawing.Point(x, y);
+                        if (block.CanPlace(grid))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
     private void PlaySound(string fileName)
     {
         try
         {
-            SoundPlayer player = new SoundPlayer($"Resources\\{fileName}");
-            player.Play();
+            string fullPath = System.IO.Path.Combine(Application.StartupPath, "Resources", fileName);
+            if (System.IO.File.Exists(fullPath))
+            {
+                SoundPlayer player = new SoundPlayer(fullPath);
+                player.Play();  // Tunggu sampai selesai (atau gunakan Thread/Task jika async)
+
+            }
+            else
+            {
+                MessageBox.Show($"Sound file not found: {fullPath}");
+            }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error playing sound: {ex.Message}");
+        }
     }
+
 }

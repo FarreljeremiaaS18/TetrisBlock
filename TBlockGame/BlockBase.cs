@@ -90,31 +90,34 @@ public abstract class BlockBase : Panel, IDraggable
     {
         var bounds = GetShapeBounds();
 
-        // Hitung posisi center dari block
-        int blockCenterX = this.Left + (this.Width / 2);
-        int blockCenterY = this.Top + (this.Height / 2);
+        // Hitung posisi kiri-atas block relatif ke grid panel
+        int blockLeftInGrid = this.Left - GridOffset.X;
+        int blockTopInGrid = this.Top - GridOffset.Y;
 
-        // Konversi ke koordinat grid
-        int gridX = (int)Math.Round((double)(blockCenterX - GridOffset.X) / cellSize);
-        int gridY = (int)Math.Round((double)(blockCenterY - GridOffset.Y) / cellSize);
+        // Hitung koordinat grid kasar (bukan center)
+        int gridX = (int)Math.Round((double)blockLeftInGrid / cellSize);
+        int gridY = (int)Math.Round((double)blockTopInGrid / cellSize);
 
+        // Sesuaikan offset berdasarkan shape
+        int offsetX = bounds.X;
+        int offsetY = bounds.Y;
 
-        // Sesuaikan dengan bounds shape
-        int targetGridX = (int)gridX - bounds.X - (bounds.Width / 2);
-        int targetGridY = (int)gridY - bounds.Y - (bounds.Height / 2);
+        // Koreksi agar posisi block sesuai dengan titik kiri-atas grid shape
+        GridPosition = new Point(gridX - offsetX, gridY - offsetY);
 
-        // Batasi agar tidak keluar dari grid
-        targetGridX = Math.Max(0, Math.Min(targetGridX, 8 - bounds.Width + 1));
-        targetGridY = Math.Max(0, Math.Min(targetGridY, 8 - bounds.Height + 1));
+        // Pastikan tidak keluar dari batas grid
+        GridPosition = new Point(
+            Math.Max(0, Math.Min(GridPosition.X, 9 - bounds.Width)),
+            Math.Max(0, Math.Min(GridPosition.Y, 9 - bounds.Height))
+        );
 
-        GridPosition = new Point(targetGridX, targetGridY);
-
-        // Set posisi visual yang tepat
+        // Update posisi visual agar sejajar dengan grid
         this.Location = new Point(
-            GridOffset.X + (targetGridX + bounds.X) * cellSize,
-            GridOffset.Y + (targetGridY + bounds.Y) * cellSize
+            GridOffset.X + (GridPosition.X + bounds.X) * cellSize,
+            GridOffset.Y + (GridPosition.Y + bounds.Y) * cellSize
         );
     }
+
 
     private Rectangle GetShapeBounds()
     {
@@ -191,12 +194,7 @@ public abstract class BlockBase : Panel, IDraggable
             int drawX = (p.X - bounds.X) * cellSize;
             int drawY = (p.Y - bounds.Y) * cellSize;
 
-            Rectangle rect = new Rectangle(
-                drawX,
-                drawY,
-                cellSize - 2,
-                cellSize - 2
-            );
+            Rectangle rect = new Rectangle(drawX, drawY, cellSize - 2, cellSize - 2);
 
             if (rect.Width <= 0 || rect.Height <= 0)
                 continue;
@@ -210,18 +208,11 @@ public abstract class BlockBase : Panel, IDraggable
                     bool validPosition = IsValidGridPosition();
                     bool canPlace = validPosition && CanPlace(gameController.GetGrid());
 
-                    if (canPlace)
+                    // Warna highlight
+                    using (Brush brush = new SolidBrush(canPlace ? Color.FromArgb(150, Color.LightGreen) : Color.FromArgb(150, Color.Red)))
                     {
-                        g.FillRectangle(Brushes.LightGreen, rect);
+                        g.FillRectangle(brush, rect);
                     }
-                    else
-                    {
-                        g.FillRectangle(Brushes.Red, rect);
-                    }
-                }
-                else
-                {
-                    g.FillRectangle(Brushes.Red, rect);
                 }
             }
             else
@@ -235,6 +226,7 @@ public abstract class BlockBase : Panel, IDraggable
             g.DrawRectangle(Pens.Black, rect);
         }
     }
+
 
     private GameController FindGameController()
     {
