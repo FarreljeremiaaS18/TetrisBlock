@@ -4,7 +4,23 @@ using System.Windows.Forms;
 
 public abstract class BlockBase : Panel, IDraggable
 {
-    public abstract Point[] Shape { get; }
+    public abstract Point[][] AllShapes { get; }
+    public virtual Color BlockColor { get { return Color.SteelBlue; } }
+
+    protected int currentRotation = 0;
+    public int CurrentRotation
+    {
+        get => currentRotation;
+        set
+        {
+            currentRotation = value;
+            var bounds = GetShapeBounds();
+            this.Width = bounds.Width * cellSize;
+            this.Height = bounds.Height * cellSize;
+            this.Invalidate();
+        }
+    }
+    public Point[] Shape => AllShapes[currentRotation];
 
     protected int cellSize = 30;
     public Point GridPosition;
@@ -12,12 +28,12 @@ public abstract class BlockBase : Panel, IDraggable
     private bool isDragging = false;
     private Point dragOffset;
 
-   
     public static Point GridOffset = new Point(200, 100);
 
     public BlockBase()
     {
-  
+        currentRotation = 0;
+
         var bounds = GetShapeBounds();
         this.Width = bounds.Width * cellSize;
         this.Height = bounds.Height * cellSize;
@@ -30,8 +46,22 @@ public abstract class BlockBase : Panel, IDraggable
         this.DoubleBuffered = true;
     }
 
+    public void SetRotation(int rotation)
+    {
+        if (rotation >= 0 && rotation < AllShapes.Length)
+        {
+            CurrentRotation = rotation;
+        }
+    }
+
     private void Block_MouseDown(object sender, MouseEventArgs e)
     {
+        if (e.Button == MouseButtons.Right)
+        {
+            CurrentRotation = (currentRotation + 1) % AllShapes.Length;
+            return;
+        }
+
         isDragging = true;
         dragOffset = e.Location;
         OnDragStart();
@@ -51,9 +81,7 @@ public abstract class BlockBase : Panel, IDraggable
     private void Block_MouseUp(object sender, MouseEventArgs e)
     {
         isDragging = false;
-
         SnapToGrid();
-
         OnDragEnd();
         OnBlockPlaced?.Invoke();
     }
@@ -62,26 +90,36 @@ public abstract class BlockBase : Panel, IDraggable
     {
         var bounds = GetShapeBounds();
 
-        
-        int gridX = (this.Left - GridOffset.X) / cellSize + bounds.X;
-        int gridY = (this.Top - GridOffset.Y) / cellSize + bounds.Y;
+        // Hitung posisi center dari block
+        int blockCenterX = this.Left + (this.Width / 2);
+        int blockCenterY = this.Top + (this.Height / 2);
 
-       
-        gridX = Math.Max(bounds.X, Math.Min(gridX, 9 - (bounds.Width - bounds.X)));
-        gridY = Math.Max(bounds.Y, Math.Min(gridY, 9 - (bounds.Height - bounds.Y)));
-
-        GridPosition = new Point(gridX - bounds.X, gridY - bounds.Y);
+        // Konversi ke koordinat grid
+        int gridX = (int)Math.Round((double)(blockCenterX - GridOffset.X) / cellSize);
+        int gridY = (int)Math.Round((double)(blockCenterY - GridOffset.Y) / cellSize);
 
 
+        // Sesuaikan dengan bounds shape
+        int targetGridX = (int)gridX - bounds.X - (bounds.Width / 2);
+        int targetGridY = (int)gridY - bounds.Y - (bounds.Height / 2);
+
+        // Batasi agar tidak keluar dari grid
+        targetGridX = Math.Max(0, Math.Min(targetGridX, 8 - bounds.Width + 1));
+        targetGridY = Math.Max(0, Math.Min(targetGridY, 8 - bounds.Height + 1));
+
+        GridPosition = new Point(targetGridX, targetGridY);
+
+        // Set posisi visual yang tepat
         this.Location = new Point(
-            GridOffset.X + (gridX - bounds.X) * cellSize,
-            GridOffset.Y + (gridY - bounds.Y) * cellSize
+            GridOffset.X + (targetGridX + bounds.X) * cellSize,
+            GridOffset.Y + (targetGridY + bounds.Y) * cellSize
         );
     }
 
     private Rectangle GetShapeBounds()
     {
-        if (Shape.Length == 0) return new Rectangle(0, 0, 3, 3);
+        if (Shape == null || Shape.Length == 0)
+            return new Rectangle(0, 0, 3, 3);
 
         int minX = Shape[0].X, maxX = Shape[0].X;
         int minY = Shape[0].Y, maxY = Shape[0].Y;
@@ -94,34 +132,32 @@ public abstract class BlockBase : Panel, IDraggable
             if (point.Y > maxY) maxY = point.Y;
         }
 
-        return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
-    }
+        int width = Math.Max(1, maxX - minX + 1);
+        int height = Math.Max(1, maxY - minY + 1);
 
-    private int GetMaxShapeWidth()
-    {
-        int max = 0;
-        foreach (var p in Shape)
-            if (p.X > max) max = p.X;
-        return max + 1;
-    }
-
-    private int GetMaxShapeHeight()
-    {
-        int max = 0;
-        foreach (var p in Shape)
-            if (p.Y > max) max = p.Y;
-        return max + 1;
+        return new Rectangle(minX, minY, width, height);
     }
 
     public virtual void OnDragStart() => this.BringToFront();
 
     public virtual void OnDragging(int x, int y)
     {
+        // Update grid position saat dragging untuk preview
         var bounds = GetShapeBounds();
-     
-        int gridX = (x - GridOffset.X) / cellSize + bounds.X;
-        int gridY = (y - GridOffset.Y) / cellSize + bounds.Y;
-        GridPosition = new Point(gridX - bounds.X, gridY - bounds.Y);
+
+        // Hitung posisi grid berdasarkan posisi block saat ini
+        int blockCenterX = x + (this.Width / 2);
+        int blockCenterY = y + (this.Height / 2);
+
+        int gridX = (blockCenterX - GridOffset.X) / cellSize;
+        int gridY = (blockCenterY - GridOffset.Y) / cellSize;
+
+        // Sesuaikan dengan offset shape
+        GridPosition = new Point(gridX - bounds.X - (bounds.Width / 2),
+                                gridY - bounds.Y - (bounds.Height / 2));
+
+        // Invalidate untuk update visual preview
+        this.Invalidate();
     }
 
     public virtual void OnDragEnd() { }
@@ -130,17 +166,28 @@ public abstract class BlockBase : Panel, IDraggable
     public abstract void Place(GridManager grid);
     public abstract bool CanPlace(GridManager grid);
 
+    // Helper method untuk debugging
+    public bool IsValidGridPosition()
+    {
+        foreach (var p in Shape)
+        {
+            int checkX = GridPosition.X + p.X;
+            int checkY = GridPosition.Y + p.Y;
+            if (checkX < 0 || checkX >= 9 || checkY < 0 || checkY >= 9)
+                return false;
+        }
+        return true;
+    }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         base.OnPaint(e);
         Graphics g = e.Graphics;
 
-    
         var bounds = GetShapeBounds();
 
         foreach (var p in Shape)
         {
-   
             int drawX = (p.X - bounds.X) * cellSize;
             int drawY = (p.Y - bounds.Y) * cellSize;
 
@@ -151,30 +198,46 @@ public abstract class BlockBase : Panel, IDraggable
                 cellSize - 2
             );
 
+            if (rect.Width <= 0 || rect.Height <= 0)
+                continue;
 
-            Brush brush = Brushes.SteelBlue;
             if (isDragging && Parent != null)
             {
-               
                 var gameController = FindGameController();
-                if (gameController != null && !CanPlace(gameController.GetGrid()))
+                if (gameController != null)
                 {
-                    brush = Brushes.Red; 
+                    // Cek apakah posisi valid dan bisa ditempatkan
+                    bool validPosition = IsValidGridPosition();
+                    bool canPlace = validPosition && CanPlace(gameController.GetGrid());
+
+                    if (canPlace)
+                    {
+                        g.FillRectangle(Brushes.LightGreen, rect);
+                    }
+                    else
+                    {
+                        g.FillRectangle(Brushes.Red, rect);
+                    }
                 }
                 else
                 {
-                    brush = Brushes.LightGreen; 
+                    g.FillRectangle(Brushes.Red, rect);
+                }
+            }
+            else
+            {
+                using (SolidBrush brush = new SolidBrush(BlockColor))
+                {
+                    g.FillRectangle(brush, rect);
                 }
             }
 
-            g.FillRectangle(brush, rect);
             g.DrawRectangle(Pens.Black, rect);
         }
     }
 
     private GameController FindGameController()
     {
-       
         if (Parent is FormMain form)
         {
             var field = typeof(FormMain).GetField("game",

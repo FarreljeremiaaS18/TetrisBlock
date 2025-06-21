@@ -41,10 +41,9 @@ public class FormMain : Form
         btnRestart.Click += BtnRestart_Click;
         this.Controls.Add(btnRestart);
 
-   
         gridPanel = new GridPanel();
         gridPanel.Location = BlockBase.GridOffset;
-        gridPanel.Size = new Size(9 * 30, 9 * 30); 
+        gridPanel.Size = new Size(9 * 30, 9 * 30);
         gridPanel.BackColor = Color.LightGray;
         this.Controls.Add(gridPanel);
 
@@ -63,7 +62,6 @@ public class FormMain : Form
 
     public void RestartGame()
     {
-
         var controlsToRemove = new List<Control>();
         foreach (Control ctrl in this.Controls)
         {
@@ -79,7 +77,6 @@ public class FormMain : Form
         game = new GameController(this);
         UpdateScoreLabel(0);
 
-      
         gridPanel.Invalidate();
     }
 
@@ -93,7 +90,6 @@ public class FormMain : Form
         return game;
     }
 }
-
 
 public class GridPanel : Panel
 {
@@ -112,23 +108,19 @@ public class GridPanel : Panel
 
         Graphics g = e.Graphics;
 
-    
         using (Pen pen = new Pen(Color.Gray, 1))
         {
-        
             for (int x = 0; x <= gridWidth; x++)
             {
                 g.DrawLine(pen, x * cellSize, 0, x * cellSize, gridHeight * cellSize);
             }
 
-           
             for (int y = 0; y <= gridHeight; y++)
             {
                 g.DrawLine(pen, 0, y * cellSize, gridWidth * cellSize, y * cellSize);
             }
         }
 
-      
         if (Parent is FormMain form)
         {
             var gameController = form.GetGameController();
