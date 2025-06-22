@@ -27,6 +27,7 @@ public abstract class BlockBase : Panel, IDraggable
 
     private bool isDragging = false;
     private Point dragOffset;
+    private Point initialLocation; // Menyimpan posisi awal untuk restore jika tidak valid
 
     public static Point GridOffset = new Point(200, 100);
 
@@ -62,9 +63,13 @@ public abstract class BlockBase : Panel, IDraggable
             return;
         }
 
-        isDragging = true;
-        dragOffset = e.Location;
-        OnDragStart();
+        if (e.Button == MouseButtons.Left)
+        {
+            isDragging = true;
+            dragOffset = e.Location;
+            initialLocation = this.Location; // Simpan posisi awal
+            OnDragStart();
+        }
     }
 
     private void Block_MouseMove(object sender, MouseEventArgs e)
@@ -80,10 +85,54 @@ public abstract class BlockBase : Panel, IDraggable
 
     private void Block_MouseUp(object sender, MouseEventArgs e)
     {
-        isDragging = false;
-        SnapToGrid();
-        OnDragEnd();
-        OnBlockPlaced?.Invoke();
+        if (isDragging)
+        {
+            isDragging = false;
+
+            // Cek apakah block berada di area grid
+            if (IsInGridArea())
+            {
+                SnapToGrid();
+
+                // Hanya place jika posisi valid dan bisa ditempatkan
+                if (IsValidGridPosition() && CanPlace(FindGameController()?.GetGrid()))
+                {
+                    OnBlockPlaced?.Invoke();
+                }
+                else
+                {
+                    // Kembalikan ke posisi awal jika tidak bisa ditempatkan
+                    this.Location = initialLocation;
+                    GridPosition = new Point(-10, -10);
+                }
+            }
+            else
+            {
+                // Jika di-drop di luar grid area, kembalikan ke posisi awal
+                this.Location = initialLocation;
+                GridPosition = new Point(-10, -10);
+            }
+
+            OnDragEnd();
+        }
+    }
+
+    private bool IsInGridArea()
+    {
+        // Cek apakah block berada di dalam area grid
+        var gridBounds = new Rectangle(
+            GridOffset.X,
+            GridOffset.Y,
+            9 * cellSize, // 9 cells * 30 pixels
+            9 * cellSize  // 9 cells * 30 pixels
+        );
+
+        var blockCenter = new Point(
+            this.Location.X + this.Width / 2,
+            this.Location.Y + this.Height / 2
+        );
+
+        return gridBounds.Contains(blockCenter);
     }
 
     private void SnapToGrid()
@@ -117,7 +166,6 @@ public abstract class BlockBase : Panel, IDraggable
             GridOffset.Y + (GridPosition.Y + bounds.Y) * cellSize
         );
     }
-
 
     private Rectangle GetShapeBounds()
     {
@@ -226,7 +274,6 @@ public abstract class BlockBase : Panel, IDraggable
             g.DrawRectangle(Pens.Black, rect);
         }
     }
-
 
     private GameController FindGameController()
     {
