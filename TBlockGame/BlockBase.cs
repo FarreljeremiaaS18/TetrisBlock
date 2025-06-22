@@ -193,21 +193,21 @@ public abstract class BlockBase : Panel, IDraggable
 
     public virtual void OnDragging(int x, int y)
     {
-        // Update grid position saat dragging untuk preview
+       
         var bounds = GetShapeBounds();
 
-        // Hitung posisi grid berdasarkan posisi block saat ini
+        
         int blockCenterX = x + (this.Width / 2);
         int blockCenterY = y + (this.Height / 2);
 
         int gridX = (blockCenterX - GridOffset.X) / cellSize;
         int gridY = (blockCenterY - GridOffset.Y) / cellSize;
 
-        // Sesuaikan dengan offset shape
+        
         GridPosition = new Point(gridX - bounds.X - (bounds.Width / 2),
                                 gridY - bounds.Y - (bounds.Height / 2));
 
-        // Invalidate untuk update visual preview
+        
         this.Invalidate();
     }
 
@@ -217,7 +217,7 @@ public abstract class BlockBase : Panel, IDraggable
     public abstract void Place(GridManager grid);
     public abstract bool CanPlace(GridManager grid);
 
-    // Helper method untuk debugging
+    
     public bool IsValidGridPosition()
     {
         foreach (var p in Shape)
@@ -252,11 +252,11 @@ public abstract class BlockBase : Panel, IDraggable
                 var gameController = FindGameController();
                 if (gameController != null)
                 {
-                    // Cek apakah posisi valid dan bisa ditempatkan
+                   
                     bool validPosition = IsValidGridPosition();
                     bool canPlace = validPosition && CanPlace(gameController.GetGrid());
 
-                    // Warna highlight
+                  
                     using (Brush brush = new SolidBrush(canPlace ? Color.FromArgb(150, Color.LightGreen) : Color.FromArgb(150, Color.Red)))
                     {
                         g.FillRectangle(brush, rect);

@@ -37,15 +37,13 @@ public class GameController
             return;
         }
 
-        // Spawn block baru
         BlockBase block = GenerateRandomBlock();
 
-        // Tentukan posisi spawn
         int spawnX = 20;
-        int spawnY = 200 + (activeBlocks.Count * 120); // block ke-2 lebih bawah
+        int spawnY = 200 + (activeBlocks.Count * 120); 
 
         block.Location = new System.Drawing.Point(spawnX, spawnY);
-        block.GridPosition = new System.Drawing.Point(-10, -10); // awal tidak valid
+        block.GridPosition = new System.Drawing.Point(-10, -10); 
 
         block.OnBlockPlaced = () =>
         {
@@ -67,11 +65,11 @@ public class GameController
                 form.Controls.Remove(block);
                 activeBlocks.Remove(block);
 
-                // ❗ Cek apakah game benar-benar sudah over setelah block ditempatkan
+               
                 if (activeBlocks.Count == 0 && !CanAnyBlockFit())
                 {
                     PlaySound("GAMEOVER.mp3");
-                    MessageBox.Show("Game Over!\nTidak ada lagi block yang bisa ditempatkan.");
+                    MessageBox.Show("Game Over!\nTidak ada Space tersedia");
                 }
             }
             else
@@ -85,7 +83,7 @@ public class GameController
         form.Controls.Add(block);
         activeBlocks.Add(block);
 
-        // Setelah spawn 2 block, cek apakah salah satunya bisa diletakkan
+
         if (activeBlocks.Count == 2 && !CanAnyActiveBlockBePlaced())
         {
             PlaySound("GAMEOVER.wav");
@@ -118,12 +116,12 @@ public class GameController
 
     private bool IsBlockInGridArea(BlockBase block)
     {
-        // Cek apakah block berada di dalam area grid 9x9
+
         var gridBounds = new System.Drawing.Rectangle(
             BlockBase.GridOffset.X,
             BlockBase.GridOffset.Y,
-            9 * 30, // 9 cells * 30 pixels
-            9 * 30  // 9 cells * 30 pixels
+            9 * 30, 
+            9 * 30  
         );
 
         var blockBounds = new System.Drawing.Rectangle(
@@ -133,7 +131,7 @@ public class GameController
             block.Height
         );
 
-        // Return true jika ada overlap antara block dan grid
+     
         return gridBounds.IntersectsWith(blockBounds);
     }
 
@@ -220,7 +218,7 @@ public class GameController
             if (System.IO.File.Exists(fullPath))
             {
                 SoundPlayer player = new SoundPlayer(fullPath);
-                player.Play();  // Tunggu sampai selesai (atau gunakan Thread/Task jika async)
+                player.Play(); 
 
             }
             else

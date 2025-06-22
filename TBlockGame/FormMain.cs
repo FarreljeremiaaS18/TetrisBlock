@@ -8,6 +8,7 @@ public class FormMain : Form
     private GameController game;
     private Button btnSpawn;
     private Button btnRestart;
+    private Button btnExit;
     private Label lblScore;
     private Panel gridPanel;
 
@@ -47,6 +48,15 @@ public class FormMain : Form
         gridPanel.BackColor = Color.LightGray;
         this.Controls.Add(gridPanel);
 
+       
+        btnExit = new Button();
+        btnExit.Text = "Exit";
+        btnExit.Width = 120;
+        btnExit.Height = 40;
+        btnExit.Location = new System.Drawing.Point(BlockBase.GridOffset.X + 50, BlockBase.GridOffset.Y + (9 * 30) + 20);
+        btnExit.Click += BtnExit_Click;
+        this.Controls.Add(btnExit);
+
         game = new GameController(this);
     }
 
@@ -58,6 +68,19 @@ public class FormMain : Form
     private void BtnRestart_Click(object sender, EventArgs e)
     {
         RestartGame();
+    }
+
+    private void BtnExit_Click(object sender, EventArgs e)
+    {
+       
+        DialogResult result = MessageBox.Show("Yakin Udah Mainnya?",
+            "Konfirmasi Keluar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+        if (result == DialogResult.Yes)
+        {
+            this.Close();
+            Application.Exit();
+        }
     }
 
     public void RestartGame()
