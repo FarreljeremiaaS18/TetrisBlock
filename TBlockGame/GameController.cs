@@ -20,17 +20,17 @@ public class GameController
 
     public void SpawnBlock()
     {
-        // Hapus blok yang sudah ditempatkan (tidak lagi di form)
+       
         activeBlocks.RemoveAll(b => !form.Controls.Contains(b));
 
-        // Jika sudah ada 2 block aktif, jangan spawn lagi
+       
         if (activeBlocks.Count >= 2)
         {
             MessageBox.Show("Maksimal 2 block aktif dalam satu waktu.");
             return;
         }
 
-        // Cek apakah ada kemungkinan block apa pun bisa ditempatkan
+       
         if (!CanAnyBlockFit())
         {
             MessageBox.Show("Game Over!\nTidak Tersedia Grid kosong yang mampu untuk menempatkan block lagi");

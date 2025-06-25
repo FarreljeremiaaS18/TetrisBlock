@@ -54,11 +54,11 @@ public class BlockSquare : BlockBase
             int x = GridPosition.X + p.X;
             int y = GridPosition.Y + p.Y;
 
-            // Cek bounds
+      
             if (x < 0 || x >= 9 || y < 0 || y >= 9)
                 return false;
 
-            // Cek apakah cell kosong
+           
             if (!grid.IsCellEmpty(x, y))
                 return false;
         }

@@ -27,7 +27,7 @@ public abstract class BlockBase : Panel, IDraggable
 
     private bool isDragging = false;
     private Point dragOffset;
-    private Point initialLocation; // Menyimpan posisi awal untuk restore jika tidak valid
+    private Point initialLocation; 
 
     public static Point GridOffset = new Point(200, 100);
 
@@ -67,7 +67,7 @@ public abstract class BlockBase : Panel, IDraggable
         {
             isDragging = true;
             dragOffset = e.Location;
-            initialLocation = this.Location; // Simpan posisi awal
+            initialLocation = this.Location; 
             OnDragStart();
         }
     }
@@ -89,26 +89,26 @@ public abstract class BlockBase : Panel, IDraggable
         {
             isDragging = false;
 
-            // Cek apakah block berada di area grid
+     
             if (IsInGridArea())
             {
                 SnapToGrid();
 
-                // Hanya place jika posisi valid dan bisa ditempatkan
+                
                 if (IsValidGridPosition() && CanPlace(FindGameController()?.GetGrid()))
                 {
                     OnBlockPlaced?.Invoke();
                 }
                 else
                 {
-                    // Kembalikan ke posisi awal jika tidak bisa ditempatkan
+                
                     this.Location = initialLocation;
                     GridPosition = new Point(-10, -10);
                 }
             }
             else
             {
-                // Jika di-drop di luar grid area, kembalikan ke posisi awal
+               
                 this.Location = initialLocation;
                 GridPosition = new Point(-10, -10);
             }
@@ -119,12 +119,12 @@ public abstract class BlockBase : Panel, IDraggable
 
     private bool IsInGridArea()
     {
-        // Cek apakah block berada di dalam area grid
+       
         var gridBounds = new Rectangle(
             GridOffset.X,
             GridOffset.Y,
-            9 * cellSize, // 9 cells * 30 pixels
-            9 * cellSize  // 9 cells * 30 pixels
+            9 * cellSize, 
+            9 * cellSize 
         );
 
         var blockCenter = new Point(
@@ -139,28 +139,28 @@ public abstract class BlockBase : Panel, IDraggable
     {
         var bounds = GetShapeBounds();
 
-        // Hitung posisi kiri-atas block relatif ke grid panel
+
         int blockLeftInGrid = this.Left - GridOffset.X;
         int blockTopInGrid = this.Top - GridOffset.Y;
 
-        // Hitung koordinat grid kasar (bukan center)
+        
         int gridX = (int)Math.Round((double)blockLeftInGrid / cellSize);
         int gridY = (int)Math.Round((double)blockTopInGrid / cellSize);
 
-        // Sesuaikan offset berdasarkan shape
+ 
         int offsetX = bounds.X;
         int offsetY = bounds.Y;
 
-        // Koreksi agar posisi block sesuai dengan titik kiri-atas grid shape
+       
         GridPosition = new Point(gridX - offsetX, gridY - offsetY);
 
-        // Pastikan tidak keluar dari batas grid
+        
         GridPosition = new Point(
             Math.Max(0, Math.Min(GridPosition.X, 9 - bounds.Width)),
             Math.Max(0, Math.Min(GridPosition.Y, 9 - bounds.Height))
         );
 
-        // Update posisi visual agar sejajar dengan grid
+       
         this.Location = new Point(
             GridOffset.X + (GridPosition.X + bounds.X) * cellSize,
             GridOffset.Y + (GridPosition.Y + bounds.Y) * cellSize
