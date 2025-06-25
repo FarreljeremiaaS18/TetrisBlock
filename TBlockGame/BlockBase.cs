@@ -27,7 +27,7 @@ public abstract class BlockBase : Panel, IDraggable
 
     private bool isDragging = false;
     private Point dragOffset;
-    private Point initialLocation; 
+    private Point initialLocation; //Menyimpan posisi awal before dragging
 
     public static Point GridOffset = new Point(200, 100);
 
@@ -57,17 +57,18 @@ public abstract class BlockBase : Panel, IDraggable
 
     private void Block_MouseDown(object sender, MouseEventArgs e)
     {
+        //rotasi block jika klik kanan
         if (e.Button == MouseButtons.Right)
         {
             CurrentRotation = (currentRotation + 1) % AllShapes.Length;
             return;
         }
-
+        //mulai drag jika klik kiri
         if (e.Button == MouseButtons.Left)
         {
             isDragging = true;
             dragOffset = e.Location;
-            initialLocation = this.Location; 
+            initialLocation = this.Location; //Simpan posisi awal panel
             OnDragStart();
         }
     }
@@ -76,6 +77,7 @@ public abstract class BlockBase : Panel, IDraggable
     {
         if (isDragging)
         {
+            //Hitung posisi baru berdasarkan offset drag
             int newX = this.Left + (e.X - dragOffset.X);
             int newY = this.Top + (e.Y - dragOffset.Y);
             this.Location = new Point(newX, newY);
@@ -89,7 +91,7 @@ public abstract class BlockBase : Panel, IDraggable
         {
             isDragging = false;
 
-     
+            //Cek apakah block di dalam area grid
             if (IsInGridArea())
             {
                 SnapToGrid();
@@ -108,7 +110,7 @@ public abstract class BlockBase : Panel, IDraggable
             }
             else
             {
-               
+               //Jika dilepaskan diluar grid, kembalikan ke posisi awal
                 this.Location = initialLocation;
                 GridPosition = new Point(-10, -10);
             }

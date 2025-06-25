@@ -4,12 +4,14 @@ using System.Windows.Forms;
 
 public class FormMenu : Form
 {
+    
     private Button btnStart;
     private Button btnExit;
     private Label lblTitle;
 
     public FormMenu()
     {
+        
         this.Text = "TBlockGame - Main Menu";
         this.Width = 320;
         this.Height = 250;
