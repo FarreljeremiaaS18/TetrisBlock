@@ -33,7 +33,7 @@ public class GameController
        
         if (!CanAnyBlockFit())
         {
-            MessageBox.Show("Game Over!\nTidak Tersedia Grid kosong yang mampu untuk menempatkan block lagi");
+            MessageBox.Show("Game Over!\nTidak ada Space tersedia");
             return;
         }
 
